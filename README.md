@@ -1,7 +1,6 @@
 # OpenFace: an open source facial behavior analysis toolkit
 
-[![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
-[![Build status](https://ci.appveyor.com/api/projects/status/8msiklxfbhlnsmxp/branch/master?svg=true)](https://ci.appveyor.com/project/TadasBaltrusaitis/openface/branch/master)
+
 
 Over the past few years, there has been an increased interest in automatic facial behavior analysis and understanding. We present OpenFace – an open source tool intended for computer vision and machine learning researchers, affective computing community and people interested in building interactive applications based on facial behavior analysis. OpenFace is the ﬁrst open source tool capable of facial landmark detection, head pose estimation, facial action unit recognition, and eye-gaze estimation. The computer vision algorithms which represent the core of OpenFace demonstrate state-of-the-art results in all of the above mentioned tasks. Furthermore, our tool is capable of real-time performance and is able to run from a simple webcam without any specialist hardware.
 
@@ -9,6 +8,43 @@ The code was written mainly by Tadas Baltrusaitis during his time at the Languag
 
 Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Institute for Creative Technologies for help in writing and testing the code, and Erroll Wood for the gaze estimation work.
 
+## Python Interface
+this brunch contains python bindings to openFace library. they were writen as a part of my master thesis and are free to any use.
+there are only bindings for small part of openFace library.
+
+### Available bindings and how to use them
+```
+getLandmarksInImage(frame_obj,rect_object)
+```
+function detects landmarks in image and returns bool success take as arg 
+greyscale frame and face bounding rect rect_object[left, top, right, bottom]. usefull only with getHeadPose or getGaze.
+when using working with static images. 
+
+```
+getGaze(frame_obj, externalDetection, debug)
+```
+function detects gaze vector from face image for left and right eye separately and returns them.
+it takes 3 args greyscale frame, bool externalDetection set true when using getLandmarksInImage or earlier used getHeadPose with 
+externalDetection set to false, and bool debug to get debug image. to get Gaze angles in radians use getGazeAngle from pyOpenFaceStub
+
+```
+getHeadPose(frame_obj, useWorldCoordinates, externalDetection)
+
+```
+function detects head pose from face image and list containing 6 values first 3 are translation second 3 are rotation in radians.
+it takes 3 args greyscale frame, bool useWorldCoordinates to change  bool externalDetection set true when using getLandmarksInImage or earlier used getGaze with 
+externalDetection set to false.
+
+example how to use can be find in python/test.py
+
+### How to build and run
+```
+mkdir build
+cd build
+cmake ..
+make 
+```
+then copy pyopenface.so to python dir and run test.py you should see debug image and some numbers in console output 
 ## WIKI
 **For instructions of how to install/compile/use the project please see [WIKI](https://github.com/TadasBaltrusaitis/OpenFace/wiki)**
 

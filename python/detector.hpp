@@ -17,8 +17,8 @@ class Detector {
 public:
   static Detector * Create(const char *binary_path);
 
-  void detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,cv::Point3f &gazeDirection1,bool externalDetection, bool debug);
-  cv::Vec6d detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coordinates, bool externalDetection);
+  void detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,cv::Point3f &gazeDirection1,bool externalDetection, bool debug, float fx, float fy, float cx, float cy);
+  cv::Vec6d detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coordinates, bool externalDetection, float fx, float fy, float cx, float cy);
   bool getLandmarksInImage(cv::Mat &grayscale_frame, cv::Rect_<double> &face_rect);
   cv::Mat_<uchar> grayscale_frame_;
   LandmarkDetector::CLNF clnf_model_;

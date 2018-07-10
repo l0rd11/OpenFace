@@ -15,13 +15,12 @@ cap = cv2.VideoCapture(0)
 
 def main():
     pyOpenFaceStub = PyOpenFaceStub()
-    detector = pyOpenFaceStub.detector
     while (cap.isOpened()):
         ret, frame = cap.read()
         if ret == True:
             img = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
             time_0 = time.time()
-            gaze = detector.getGaze(img,False,True)
+            gaze = pyOpenFaceStub.getGaze(img,False,True)
 
             yaw, pitch = pyOpenFaceStub.getGazeAngle(gaze)
             print yaw, pitch

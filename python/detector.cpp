@@ -128,17 +128,10 @@ bool Detector::getLandmarksInImage(cv::Mat &grayscale_frame, cv::Rect_<double> &
         return LandmarkDetector::DetectLandmarksInImage(grayscale_frame, face_rect, clnf_model_, det_parameters_);
 }
 
-void Detector::detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,cv::Point3f &gazeDirection1,bool externalDetection, bool debug) {
+void Detector::detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,cv::Point3f &gazeDirection1,bool externalDetection, bool debug, float fx, float fy, float cx, float cy) {
 
 			bool detection_success;
-            float fx = 0, fy = 0, cx = 0, cy = 0;
-			cx = grayscale_frame.cols / 2.0f;
-			cy = grayscale_frame.rows / 2.0f;
-			fx = 500 * (grayscale_frame.cols / 640.0);
-			fy = 500 * (grayscale_frame.rows / 480.0);
 
-			fx = (fx + fy) / 2.0;
-			fy = fx;
 			if(!externalDetection)
 			{
 				detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_frame, clnf_model_, det_parameters_);
@@ -160,15 +153,7 @@ void Detector::detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,
 
 }
 
-cv::Vec6d Detector::detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coordinates, bool externalDetection) {
-            float fx = 0, fy = 0, cx = 0, cy = 0;
-			cx = grayscale_frame.cols / 2.0f;
-			cy = grayscale_frame.rows / 2.0f;
-			fx = 500 * (grayscale_frame.cols / 640.0);
-			fy = 500 * (grayscale_frame.rows / 480.0);
-
-			fx = (fx + fy) / 2.0;
-			fy = fx;
+cv::Vec6d Detector::detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coordinates, bool externalDetection, float fx, float fy, float cx, float cy) {
 			bool detection_success;
             if(!externalDetection)
 			{

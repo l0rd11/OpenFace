@@ -9,7 +9,7 @@
 namespace bp = boost::python;
 
 
-bp::list getGaze(Detector *detector, bp::object frame_obj, bool externalDetection, bool debug)
+bp::list getGaze(Detector *detector, bp::object frame_obj, bool externalDetection, bool debug, float fx, float fy, float cx, float cy)
 {
 
     PyArrayObject *frame_arr = reinterpret_cast<PyArrayObject *>(frame_obj.ptr());
@@ -24,7 +24,7 @@ bp::list getGaze(Detector *detector, bp::object frame_obj, bool externalDetectio
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
 
-    detector->detectGaze(grayscale_frame, gazeDirection0, gazeDirection1, externalDetection, debug);
+    detector->detectGaze(grayscale_frame, gazeDirection0, gazeDirection1, externalDetection, debug, fx, fy, cx, cy);
 
     bp::list list;
     list.append(gazeDirection0.x);
@@ -38,7 +38,7 @@ bp::list getGaze(Detector *detector, bp::object frame_obj, bool externalDetectio
 
 }
 
-bp::list getHeadPose(Detector *detector, bp::object frame_obj,  bool useWorldCoordinates, bool externalDetection)
+bp::list getHeadPose(Detector *detector, bp::object frame_obj,  bool useWorldCoordinates, bool externalDetection, float fx, float fy, float cx, float cy)
 {
 
     PyArrayObject *frame_arr = reinterpret_cast<PyArrayObject *>(frame_obj.ptr());
@@ -49,7 +49,7 @@ bp::list getHeadPose(Detector *detector, bp::object frame_obj,  bool useWorldCoo
 		    PyArray_DATA(frame_arr),
 		    cv::Mat::AUTO_STEP);
 
-    cv::Vec6d pose_estimate = detector->detectHeadPose(grayscale_frame, useWorldCoordinates, externalDetection);
+    cv::Vec6d pose_estimate = detector->detectHeadPose(grayscale_frame, useWorldCoordinates, externalDetection, fx, fy, cx, cy);
 
     bp::list list;
     list.append(pose_estimate[0]);

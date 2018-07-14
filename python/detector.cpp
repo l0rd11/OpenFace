@@ -63,12 +63,12 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 //	string fpsSt("FPS:");
 //	fpsSt += fpsC;
 //	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
-
-	if (!det_parameters.quiet_mode)
-	{
-		cv::namedWindow("tracking_result", 1);
-		cv::imshow("tracking_result", captured_image);
-	}
+//
+//	if (!det_parameters.quiet_mode)
+//	{
+//		cv::namedWindow("tracking_result", 1);
+//		cv::imshow("tracking_result", captured_image);
+//	}
 }
 
 

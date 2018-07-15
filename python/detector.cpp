@@ -6,9 +6,11 @@
 #include <vector>
 #include <LandmarkCoreIncludes.h>
 #include <dlib/image_processing/frontal_face_detector.h>
-#include <Face_utils.h>
-#include <FaceAnalyser.h>
+//#include <Face_utils.h>
+//#include <FaceAnalyser.h>
 #include <GazeEstimation.h>
+#include <Visualizer.h>
+#include <VisualizationUtils.h>
 
 using std::cout;
 using std::string;
@@ -16,6 +18,7 @@ using std::vector;
 void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
 {
 
+    Utilities::Visualizer visualizer(true, false, false, false);
 	// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
 	double detection_certainty = face_model.detection_certainty;
 	bool detection_success = face_model.detection_success;
@@ -23,31 +26,25 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	double visualisation_boundary = 0.2;
 
 	// Only draw if the reliability is reasonable, the value is slightly ad-hoc
-	if (detection_certainty < visualisation_boundary)
-	{
-		LandmarkDetector::Draw(captured_image, face_model);
+//	if (detection_certainty < visualisation_boundary)
+//	{
 
-		double vis_certainty = detection_certainty;
-		if (vis_certainty > 1)
-			vis_certainty = 1;
-		if (vis_certainty < -1)
-			vis_certainty = -1;
 
-		vis_certainty = (vis_certainty + 1) / (visualisation_boundary + 1);
+		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
-		// A rough heuristic for box around the face width
-		int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
+        visualizer.SetImage(captured_image, fx, fy, cx, cy);
+	    visualizer.SetObservationLandmarks(face_model.detected_landmarks, detection_certainty, face_model.GetVisibilities());
+		visualizer.SetObservationPose(pose_estimate_to_draw, detection_certainty);
+		visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, fx, fy, cx, cy), detection_certainty);
+        char character_press = visualizer.ShowObservation();
 
-		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetCorrectedPoseWorld(face_model, fx, fy, cx, cy);
+			// restart the tracker
+			if (character_press == 'r')
+			{
+				std::cout << "pressed r";
+			}
 
-		// Draw it in reddish if uncertain, blueish if certain
-		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar((1 - vis_certainty)*255.0, 0, vis_certainty * 255), thickness, fx, fy, cx, cy);
-
-		if (det_parameters.track_gaze && detection_success && face_model.eye_model)
-		{
-			FaceAnalysis::DrawGaze(captured_image, face_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-		}
-	}
+//	}
 
 //	// Work out the framerate
 //	if (frame_count % 10 == 0)
@@ -82,23 +79,23 @@ Detector * Detector::Create(const char *binary_path) {
   LandmarkDetector::FaceModelParameters det_parameters(arguments);
   // No need to validate detections, as we're not doing tracking.
   det_parameters.validate_detections = false;
-  det_parameters.track_gaze = true;
+//  det_parameters.track_gaze = true;
   // Grab camera parameters, if they are not defined 
   // (approximate values will be used).
-  float fx = 0, fy = 0, cx = 0, cy = 0;
-  int device = -1;
-  // Get camera parameters
-  LandmarkDetector::get_camera_params(device, fx, fy, cx, cy, arguments);
-  // If cx (optical axis centre) is undefined will use the image size/2 as 
-  // an estimate.
-  bool cx_undefined = false;
-  bool fx_undefined = false;
-  if (cx == 0 || cy == 0) {
-    cx_undefined = true;
-  }
-  if (fx == 0 || fy == 0) {
-    fx_undefined = true;
-  }
+//  float fx = 0, fy = 0, cx = 0, cy = 0;
+//  int device = -1;
+//  // Get camera parameters
+//  LandmarkDetector::get_camera_params(device, fx, fy, cx, cy, arguments);
+//  // If cx (optical axis centre) is undefined will use the image size/2 as
+//  // an estimate.
+//  bool cx_undefined = false;
+//  bool fx_undefined = false;
+//  if (cx == 0 || cy == 0) {
+//    cx_undefined = true;
+//  }
+//  if (fx == 0 || fy == 0) {
+//    fx_undefined = true;
+//  }
 
   // The modules that are being used for tracking.
   LandmarkDetector::CLNF clnf_model(det_parameters.model_location);
@@ -140,10 +137,10 @@ void Detector::detectGaze(cv::Mat &grayscale_frame, cv::Point3f &gazeDirection0,
 //			{
 //				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_frame, clnf_model_, det_parameters_);
 //			}
-			if (det_parameters_.track_gaze && (detection_success || externalDetection) && clnf_model_.eye_model)
+			if ( (detection_success || externalDetection) && clnf_model_.eye_model)
 			{
-				FaceAnalysis::EstimateGaze(clnf_model_, gazeDirection0, fx, fy, cx, cy, true);
-				FaceAnalysis::EstimateGaze(clnf_model_, gazeDirection1, fx, fy, cx, cy, false);
+				GazeAnalysis::EstimateGaze(clnf_model_, gazeDirection0, fx, fy, cx, cy, true);
+				GazeAnalysis::EstimateGaze(clnf_model_, gazeDirection1, fx, fy, cx, cy, false);
 			}
 
             if(debug){
@@ -163,11 +160,11 @@ cv::Vec6d Detector::detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coor
             if(detection_success || externalDetection){
                 if(use_world_coordinates)
                 {
-                    pose_estimate = LandmarkDetector::GetCorrectedPoseWorld(clnf_model_, fx, fy, cx, cy);
+                    pose_estimate = LandmarkDetector::GetPose(clnf_model_, fx, fy, cx, cy);
                 }
                 else
                 {
-                    pose_estimate = LandmarkDetector::GetCorrectedPoseCamera(clnf_model_, fx, fy, cx, cy);
+                    pose_estimate = LandmarkDetector::GetPoseWRTCamera(clnf_model_, fx, fy, cx, cy);
 			    }
 			}
 

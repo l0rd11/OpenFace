@@ -12,12 +12,16 @@ include_directories(${TBB_ROOT_DIR}/include)
 
 # Local libraries.
 include_directories(${LandmarkDetector_SOURCE_DIR}/include)
-  
+
+
 include_directories(../lib/local/LandmarkDetector/include)
-include_directories(../lib/local/FaceAnalyser/include)  
+include_directories(../lib/local/FaceAnalyser/include)
+include_directories(../lib/local/GazeAnalyser/include)
+include_directories(../lib/local/Utilities/include)
+
       
 add_library(pyopenface SHARED pyopenface.cpp detector.cpp)
-target_link_libraries(pyopenface LandmarkDetectorShared FaceAnalyserShared)
+target_link_libraries(pyopenface LandmarkDetectorShared UtilitiesShared GazeAnalyserShared)
 target_link_libraries(pyopenface ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${TBB_LIBRARIES})
 target_link_libraries(pyopenface dlib_shared)
 

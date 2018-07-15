@@ -25,6 +25,13 @@ include_directories(./include)
 include_directories(${GAZEANALYSER_SOURCE_DIR}/include)
 
 add_library( GazeAnalyser ${SOURCE} ${HEADERS})
+add_library( GazeAnalyserShared SHARED ${SOURCE} ${HEADERS} )
+
+target_link_libraries( GazeAnalyserShared ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} )
+
+
 
 install (TARGETS GazeAnalyser DESTINATION lib)
+install (TARGETS GazeAnalyserShared LIBRARY DESTINATION lib PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ GROUP_WRITE WORLD_WRITE WORLD_EXECUTE WORLD_READ)
+
 install (FILES ${HEADERS} DESTINATION include/OpenFace)

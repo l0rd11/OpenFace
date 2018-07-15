@@ -7,9 +7,11 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core.hpp>
 #include <LandmarkCoreIncludes.h>
-#include <Face_utils.h>
-#include <FaceAnalyser.h>
+//#include <Face_utils.h>
+//#include <FaceAnalyser.h>
 #include <GazeEstimation.h>
+#include <Visualizer.h>
+#include <VisualizationUtils.h>
 using std::unique_ptr;
 
 class Detector {

@@ -41,6 +41,9 @@ include_directories(./include)
 include_directories(${FACEANALYSER_SOURCE_DIR}/include)
 
 add_library( FaceAnalyser ${SOURCE} ${HEADERS})
+add_library( FaceAnalyserShared SHARED ${SOURCE} ${HEADERS} )
+target_link_libraries( FaceAnalyserShared ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} )
 
 install (TARGETS FaceAnalyser DESTINATION lib)
+install (TARGETS FaceAnalyserShared LIBRARY DESTINATION lib PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ GROUP_WRITE WORLD_WRITE WORLD_EXECUTE WORLD_READ)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)

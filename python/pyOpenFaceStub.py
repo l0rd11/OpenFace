@@ -35,7 +35,7 @@ class PyOpenFaceStub():
         fy = self.multi * (image.shape[0] / self.height)
         fx = (fx + fy) / 2.0
         fy = fx
-        return self.detector.getGaze(image, use_world_coordinates, externalDetector, fx, fy, cx, cy)
+        return self.detector.getHeadPose(image, use_world_coordinates, externalDetector, fx, fy, cx, cy)
 
     def getLandmarksInImage(self, image, rect):
         return self.detector.getLandmarksInImage(image, rect)

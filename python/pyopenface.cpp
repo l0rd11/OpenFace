@@ -92,7 +92,9 @@ bp::object getLandmarksInImage(Detector *detector, bp::object frame_obj, const b
 
 }
 
-
+void doReset(Detector *detector) {
+    detector->reset();
+}
 
 BOOST_PYTHON_MODULE(pyopenface) {
 
@@ -104,6 +106,7 @@ BOOST_PYTHON_MODULE(pyopenface) {
       .def("getGaze", &getGaze)
       .def("getHeadPose", &getHeadPose)
       .def("getLandmarksInImage", &getLandmarksInImage)
+      .def("doReset", &doReset)
       ;
 
 

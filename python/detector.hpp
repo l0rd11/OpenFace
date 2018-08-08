@@ -22,6 +22,7 @@ public:
   bool getLandmarksInImage(cv::Mat &grayscale_frame, cv::Rect_<double> &face_rect);
   cv::Mat_<uchar> grayscale_frame_;
   LandmarkDetector::CLNF clnf_model_;
+  void reset(void);
 
 private:
   Detector(LandmarkDetector::FaceModelParameters &det_parameters,

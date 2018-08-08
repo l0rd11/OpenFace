@@ -37,6 +37,12 @@ externalDetection set to false.
 
 example how to use can be find in python/test.py
 
+```
+reset()
+
+```
+function resets facial model. Useful when we lose track of fece or when working with multiple faces
+
 ### How to build and run
 ```
 mkdir build

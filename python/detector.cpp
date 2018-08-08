@@ -172,6 +172,13 @@ cv::Vec6d Detector::detectHeadPose(cv::Mat &grayscale_frame, bool use_world_coor
 
 }
 
+void Detector::reset(void) {
+        clnf_model_.Reset();
+}
+
+
+
+
 
 
 

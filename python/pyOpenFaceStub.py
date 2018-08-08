@@ -44,4 +44,7 @@ class PyOpenFaceStub():
     def getLandmarksInImage(self, image, rect):
         return self.detector.getLandmarksInImage(image, rect)
 
+    def reset(self):
+        self.detector.doReset()
+
 

@@ -1,6 +1,6 @@
 import os
 import pyopenface
-from math import atan2
+from math import atan2, sqrt, acos
 
 
 class PyOpenFaceStub():
@@ -14,9 +14,13 @@ class PyOpenFaceStub():
 
 
     def getGazeAngle(self, gaze):
-        gaze_vector = ((gaze[0] + gaze[3]) / 2, (gaze[1] + gaze[4]) / 2, (gaze[2] + gaze[5]) / 2)
+        gaze_vector = ((gaze[0] + gaze[3]) / 2.0, (gaze[1] + gaze[4]) / 2.0, (gaze[2] + gaze[5]) / 2.0)
+        l = sqrt(gaze_vector[0] * gaze_vector[0] + gaze_vector[2] * gaze_vector[2])
         x_angle = atan2(gaze_vector[0], -gaze_vector[2])
-        y_angle = atan2(gaze_vector[1], -gaze_vector[2])
+        # y_angle = atan2(gaze_vector[1], -gaze_vector[2])
+        # y_angle = (acos(gaze_vector[1]) - 1.5707963268)
+        y_angle = (acos(gaze_vector[1] / l) - 1.5707963268)
+        # y_angle = atan(gaze_vector[1] / sqrt(pow(gaze_vector[0], 2) + pow(gaze_vector[2], 2)))
         return x_angle, y_angle
 
     def getGaze(self,image, externalDetector, debug):
@@ -35,7 +39,7 @@ class PyOpenFaceStub():
         fy = self.multi * (image.shape[0] / self.height)
         fx = (fx + fy) / 2.0
         fy = fx
-        return self.detector.getGaze(image, use_world_coordinates, externalDetector, fx, fy, cx, cy)
+        return self.detector.getHeadPose(image, use_world_coordinates, externalDetector, fx, fy, cx, cy)
 
     def getLandmarksInImage(self, image, rect):
         return self.detector.getLandmarksInImage(image, rect)

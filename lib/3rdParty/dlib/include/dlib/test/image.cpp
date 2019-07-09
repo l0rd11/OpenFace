@@ -789,7 +789,7 @@ namespace
         border_enumerator be(get_rect(imout),rect);
         while (be.move_next())
         {
-            DLIB_TEST(imout[be.element().y()][be.element().x()] == 0)
+            DLIB_TEST(imout[be.element().y()][be.element().x()] == 0);
         }
         DLIB_TEST_MSG(max(abs(subm(mat(imout),rect) - subm(out,rect))) < 1e-5, max(abs(subm(mat(imout),rect) - subm(out,rect))));
 
@@ -800,7 +800,7 @@ namespace
         be = border_enumerator(get_rect(imout),rect);
         while (be.move_next())
         {
-            DLIB_TEST(imout[be.element().y()][be.element().x()] == 10)
+            DLIB_TEST(imout[be.element().y()][be.element().x()] == 10);
         }
         out += abs(xcorr_same(mat(img),filt)/2);
         DLIB_TEST(max(abs(subm(mat(imout),rect) - subm(out,rect))) < 1e-7);
@@ -812,7 +812,7 @@ namespace
         be = border_enumerator(get_rect(imout),rect);
         while (be.move_next())
         {
-            DLIB_TEST(imout[be.element().y()][be.element().x()] == -10)
+            DLIB_TEST(imout[be.element().y()][be.element().x()] == -10);
         }
         out += xcorr_same(mat(img),filt)/2;
         DLIB_TEST_MSG(max(abs(subm(mat(imout),rect) - subm(out,rect))) < 1e-5, max(abs(subm(mat(imout),rect) - subm(out,rect))));
@@ -1611,12 +1611,12 @@ namespace
                 if (get_rect(out).contains(rect))
                 {
                     T val = sum(pointwise_multiply(filt, subm(mat(img),rect)));
-                    DLIB_CASSERT(val == out[r][c],"err: " << val-out[r][c]);
-                    DLIB_CASSERT(area.contains(point(c,r)),"");
+                    DLIB_TEST_MSG(val == out[r][c],"err: " << val-out[r][c]);
+                    DLIB_TEST(area.contains(point(c,r)));
                 }
                 else
                 {
-                    DLIB_CASSERT(!area.contains(point(c,r)),"");
+                    DLIB_TEST(!area.contains(point(c,r)));
                 }
             }
         }
@@ -1659,15 +1659,331 @@ namespace
                 if (get_rect(out).contains(rect))
                 {
                     T val = sum(pointwise_multiply(col_filt*row_filt, subm(mat(img),rect)));
-                    DLIB_CASSERT(val == out[r][c],"err: " << val-out[r][c]);
+                    DLIB_TEST_MSG(val == out[r][c],"err: " << val-out[r][c]);
 
-                    DLIB_CASSERT(area.contains(point(c,r)),"");
+                    DLIB_TEST(area.contains(point(c,r)));
                 }
                 else
                 {
-                    DLIB_CASSERT(!area.contains(point(c,r)),"");
+                    DLIB_TEST(!area.contains(point(c,r)));
                 }
             }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void run_hough_test()
+    {
+        array2d<unsigned char> img(300,300);
+
+
+        for (int k = -2; k <= 2; ++k)
+        {
+            print_spinner();
+            running_stats<double> rs;
+            array2d<int> himg;
+            hough_transform ht(200+k);
+            double angle1 = 0;
+            double angle2 = 0;
+            const int len = 90;
+            // Draw a bunch of random lines, hough transform them, then make sure the hough
+            // transform detects them accurately.
+            for (int i = 0; i < 500; ++i)
+            {
+                point cent = center(get_rect(img));
+                point arc = cent + point(len,0);
+                arc = rotate_point(cent, arc, angle1);
+
+                point l = arc + point(500,0);
+                point r = arc - point(500,0);
+                l = rotate_point(arc, l, angle2);
+                r = rotate_point(arc, r, angle2);
+
+                angle1 += pi/13;
+                angle2 += pi/40;
+
+                assign_all_pixels(img, 0);
+                draw_line(img, l, r, 255);
+                rectangle box = translate_rect(get_rect(ht),point(50,50));
+                ht(img, box, himg);
+
+                point p = max_point(mat(himg));
+                DLIB_TEST(himg[p.y()][p.x()] > 255*3);
+
+                l -= point(50,50);
+                r -= point(50,50);
+                std::pair<point,point> line = ht.get_line(p);
+                // make sure the best scoring hough point matches the line we drew.
+                double dist1 = distance_to_line(make_pair(l,r), line.first);
+                double dist2 = distance_to_line(make_pair(l,r), line.second);
+                //cout << "DIST1: " << dist1 << endl;
+                //cout << "DIST2: " << dist2 << endl;
+                rs.add(dist1);
+                rs.add(dist2);
+                DLIB_TEST(dist1 < 2.5);
+                DLIB_TEST(dist2 < 2.5);
+            }
+            //cout << "rs.mean(): " << rs.mean() << endl;
+            DLIB_TEST(rs.mean() < 0.7);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_extract_image_chips()
+    {
+        dlib::rand rnd;
+
+        // Make sure that cropping a white box out of a larger white image always produces an
+        // exact white box.  This should catch any bad border effects from a messed up internal
+        // cropping.
+        for (int iter = 0; iter < 1000; ++iter)
+        {
+            print_spinner();
+            const long nr = rnd.get_random_32bit_number()%100 + 1;
+            const long nc = rnd.get_random_32bit_number()%100 + 1;
+            const long size = rnd.get_random_32bit_number()%10000 + 4;
+            const double angle = rnd.get_random_double() * pi;
+
+            matrix<int> img(501,501), chip;
+            img = 255;
+            chip_details details(centered_rect(center(get_rect(img)),nr,nc), size, angle);
+            extract_image_chip(img, details, chip);
+            DLIB_TEST_MSG(max(abs(chip-255))==0,"nr: " << nr << "  nc: "<< nc << "  size: " << size << "  angle: " << angle 
+                << " error: " << max(abs(chip-255)) );
+        }
+
+
+        {
+            // Make sure that the interpolation in extract_image_chip() keeps stuff in the
+            // right places.
+
+            matrix<unsigned char> img(10,10), chip;
+            img = 0;
+            img(1,1) = 255;
+            img(8,8) = 255;
+
+            extract_image_chip(img, chip_details(get_rect(img), 9*9), chip);
+
+            DLIB_TEST(chip(1,1) == 195);
+            DLIB_TEST(chip(7,7) == 195);
+            chip(1,1) -= 195;
+            chip(7,7) -= 195;
+            DLIB_TEST(sum(matrix_cast<int>(chip)) == 0);
+        }
+
+
+
+        // Test the rotation ability of extract_image_chip().  Do this by drawing a line and
+        // then rotating it so it's horizontal.  Check that it worked correctly by hough
+        // transforming it.
+        hough_transform ht(151);
+        matrix<unsigned char> img(300,300);
+        for (int iter = 0; iter < 1000; ++iter)
+        {
+            print_spinner();
+            img = 0;
+            const int len = 9000;
+            point cent = center(get_rect(img));
+            point l = cent + point(len,0);
+            point r = cent - point(len,0);
+            const double angle = rnd.get_random_double()*pi*3;
+            l = rotate_point(cent, l, angle);
+            r = rotate_point(cent, r, angle);
+            draw_line(img, l, r, 255);
+
+
+            const long wsize = rnd.get_random_32bit_number()%350 + 150;
+
+            matrix<unsigned char> temp;
+            chip_details details(centered_rect(center(get_rect(img)), wsize,wsize),  chip_dims(ht.size(),ht.size()), angle);
+            extract_image_chip(img, details, temp);
+
+
+            matrix<long> tform;
+            ht(temp, get_rect(temp), tform);
+            std::pair<point,point> line = ht.get_line(max_point(tform));
+
+            DLIB_TEST_MSG(line.first.y() == line.second.y()," wsize: " << wsize);
+            DLIB_TEST(length(line.first-line.second) > 100);
+            DLIB_TEST(length((line.first+line.second)/2.0 - center(get_rect(temp))) <= 1);
+        }
+
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type
+        >
+    typename pixel_traits<typename image_traits<image_type>::pixel_type>::basic_pixel_type 
+    simple_partition_pixels (
+        const image_type& img
+    ) 
+    {
+        matrix<unsigned long,1> hist;
+        get_histogram(img,hist);
+
+        auto average1 = [&](unsigned long thresh)
+        {
+            double accum = 0;
+            double cnt = 0;
+            for (unsigned long i = 0; i < thresh; ++i)
+            {
+                accum += hist(i)*i;
+                cnt += hist(i);
+            }
+
+            if (cnt != 0)
+                return accum/cnt;
+            else
+                return 0.0;
+        };
+
+        auto average2 = [&](unsigned long thresh)
+        {
+            double accum = 0;
+            double cnt = 0;
+            for (long i = thresh; i < hist.size(); ++i)
+            {
+                accum += hist(i)*i;
+                cnt += hist(i);
+            }
+
+            if (cnt != 0)
+                return accum/cnt;
+            else
+                return 0.0;
+        };
+
+
+        auto total_abs = [&](unsigned long thresh)
+        {
+            auto a = average1(thresh);
+            auto b = average2(thresh);
+
+            double score = 0;
+            for (long i = 0; i < hist.size(); ++i)
+            {
+                if (i < (long)thresh)
+                    score += std::abs(a-i)*hist(i);
+                else
+                    score += std::abs(b-i)*hist(i);
+            }
+            return score;
+        };
+
+
+        unsigned long thresh = 0;
+        double min_sad = total_abs(0);
+        for (long i = 1; i < hist.size(); ++i)
+        {
+            double sad = total_abs(i);
+            //cout << "TRUTH: i:" << i << "  total: "<< total_abs(i) << endl;
+            if (sad <= min_sad)
+            {
+                //cout << "CHANGE TRUTH: i:" << i << "  total: "<< total_abs(i)-min_sad << endl;
+                min_sad = sad;
+                thresh = i;
+            }
+        }
+
+        return thresh;
+    }
+
+    void test_partition_pixels()
+    {
+        matrix<unsigned char> img(4,7);
+
+        dlib::rand rnd;
+        for (int round = 0; round < 100; ++round)
+        {
+            print_spinner();
+            for (auto& p : img)
+                p = rnd.get_random_8bit_number();
+
+            DLIB_TEST(simple_partition_pixels(img) == partition_pixels(img));
+            unsigned char thresh;
+            impl::partition_pixels_float(img,thresh);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+
+            matrix<float> fimg = matrix_cast<float>(img);
+            DLIB_TEST(simple_partition_pixels(img) == partition_pixels(fimg));
+
+
+            std::vector<unsigned char> tmp;
+            for (auto& v : img)
+                if (v >= thresh)
+                    tmp.push_back(v);
+            matrix<unsigned char> img2 = mat(tmp);
+            unsigned char thresh2;
+            impl::partition_pixels_float(img,thresh, thresh2);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+            DLIB_TEST(simple_partition_pixels(img2) == thresh2);
+
+            partition_pixels(img,thresh, thresh2);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+            DLIB_TEST(simple_partition_pixels(img2) == thresh2);
+
+
+
+            std::vector<float> ftmp;
+            for (auto& v : fimg)
+                if (v >= thresh)
+                    ftmp.push_back(v);
+            matrix<float> fimg2 = mat(ftmp);
+            float fthresh, fthresh2;
+            partition_pixels(fimg,fthresh, fthresh2);
+            DLIB_TEST(simple_partition_pixels(img) == fthresh);
+            DLIB_TEST(simple_partition_pixels(img2) == fthresh2);
+        }
+
+
+        img.set_size(245,123);
+        for (int round = 0; round < 100; ++round)
+        {
+            print_spinner();
+            for (auto& p : img)
+                p = rnd.get_random_8bit_number();
+
+            DLIB_TEST(simple_partition_pixels(img) == partition_pixels(img));
+            unsigned char thresh;
+            impl::partition_pixels_float(img,thresh);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+
+            matrix<float> fimg = matrix_cast<float>(img);
+            DLIB_TEST(simple_partition_pixels(img) == partition_pixels(fimg));
+
+
+
+
+            std::vector<unsigned char> tmp;
+            for (auto& v : img)
+                if (v >= thresh)
+                    tmp.push_back(v);
+            matrix<unsigned char> img2 = mat(tmp);
+            unsigned char thresh2;
+            impl::partition_pixels_float(img,thresh, thresh2);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+            DLIB_TEST(simple_partition_pixels(img2) == thresh2);
+
+            partition_pixels(img,thresh, thresh2);
+            DLIB_TEST(simple_partition_pixels(img) == thresh);
+            DLIB_TEST(simple_partition_pixels(img2) == thresh2);
+
+
+
+            std::vector<float> ftmp;
+            for (auto& v : fimg)
+                if (v >= thresh)
+                    ftmp.push_back(v);
+            matrix<float> fimg2 = mat(ftmp);
+            float fthresh, fthresh2;
+            partition_pixels(fimg,fthresh, fthresh2);
+            DLIB_TEST(simple_partition_pixels(img) == fthresh);
+            DLIB_TEST(simple_partition_pixels(img2) == fthresh2);
+
         }
     }
 
@@ -1686,6 +2002,8 @@ namespace
         )
         {
             image_test();
+            run_hough_test();
+            test_extract_image_chips();
             test_integral_image<long, unsigned char>();
             test_integral_image<double, int>();
             test_integral_image<long, unsigned char>();
@@ -1741,6 +2059,18 @@ namespace
             for (int i = 0; i < 100; ++i)
                 test_separable_filtering_center<float>(rnd);
 
+            {
+                print_spinner();
+                matrix<unsigned char> img(40,80);
+                assign_all_pixels(img, 255);
+                skeleton(img);
+
+                DLIB_TEST(sum(matrix_cast<int>(mat(img)))/255 == 40);
+                draw_line(img, point(20,19), point(59,19), 00);
+                DLIB_TEST(sum(matrix_cast<int>(mat(img))) == 0);
+            }
+
+            test_partition_pixels();
         }
     } a;
 

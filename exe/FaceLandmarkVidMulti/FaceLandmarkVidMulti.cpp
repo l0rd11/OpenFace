@@ -44,6 +44,7 @@
 #include <opencv2/videoio/videoio_c.h>  // Video write
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <tbb/tbb.h>
 
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl

@@ -97,8 +97,12 @@ void doReset(Detector *detector) {
 }
 
 BOOST_PYTHON_MODULE(pyopenface) {
-
-  bp::numeric::array::set_module_and_type("numpy", "ndarray");
+    #if BOOST_VERSION < 106500
+        // Specify that py::numeric::array should refer to the Python type numpy.ndarray
+        // (rather than the older Numeric.array).
+        py::numeric::array::set_module_and_type("numpy", "ndarray");
+    #endif
+  //bp::numpy::array::set_module_and_type("numpy", "ndarray");
   import_array();
   
   bp::class_<Detector>("Detector", bp::no_init)
